@@ -1,24 +1,34 @@
 @echo off
 setlocal EnableExtensions
 
-:: =========================
-:: 1) Clean %LOCALAPPDATA%\Temp
-:: =========================
-set "TEMP_DIR=%LOCALAPPDATA%\Temp"
-
-if exist "%TEMP_DIR%\" (
-  :: Xóa file trong Temp (file bị khóa sẽ tự bỏ qua)
-  del /f /q "%TEMP_DIR%\*" >nul 2>&1
-
-  :: Xóa thư mục con trong Temp (thư mục đang dùng sẽ tự bỏ qua)
-  for /d %%D in ("%TEMP_DIR%\*") do (
-    rd /s /q "%%D" >nul 2>&1
-  )
-)
+call :CLEAN_DIR "%TEMP%"
+call :CLEAN_DIR "%TMP%"
 
 :: =========================
-:: 2) Empty Recycle Bin (silently)
+:: Empty Recycle Bin (silently)
 :: =========================
 powershell -NoProfile -ExecutionPolicy Bypass -Command "try { Clear-RecycleBin -Force -ErrorAction Stop } catch { }" >nul 2>&1
-echo Da xoa sach Thung rac (Recycle Bin).
-pause
+
+echo.
+echo Done! Da don %TEMP%, %TMP% va da xoa Recycle Bin.
+echo (Cua so CMD se giu nguyen, bam phim bat ky de thoat.)
+pause >nul
+exit /b
+
+
+:: ============================================================
+:: CLEAN_DIR: xóa nội dung trong thư mục, giữ nguyên thư mục gốc
+:: - Xóa file + thư mục con
+:: - Mục nào bị khóa/không có quyền sẽ tự bỏ qua (không báo lỗi)
+:: ============================================================
+:CLEAN_DIR
+set "TARGET=%~1"
+
+if not defined TARGET goto :eof
+if not exist "%TARGET%\" goto :eof
+
+del /f /q "%TARGET%\*" >nul 2>&1
+for /d %%D in ("%TARGET%\*") do (
+  rd /s /q "%%D" >nul 2>&1
+)
+goto :eof
